@@ -75,12 +75,32 @@ def get_image_from_cam():
             return frame
 
 
+def authenticate(autosave, showid, image=None):
+    if image is not None:
+        image_to_be_matched_encoded = prepare_image(image)
+        uuid = get_image_identifier(image_to_be_matched_encoded)
+
+        if not uuid:
+            print('Access Denied!')
+            if autosave:
+                print('Saving new user')
+                uuid = store_image_for_reference(
+                    image_to_be_matched_encoded)
+                if showid:
+                    print("Unique Identifier: ", uuid)
+        else:
+            print('Access Granted')
+            if showid:
+                print("Unique Identifier: ", uuid)
+
+
 @click.command()
 @click.option("--autosave", default=False, help="Auto save new user.")
 @click.option("--listdir", default=False, help="List all existing users.")
 @click.option("--showid", default=False, help="Show ID of authenticated user on success.")
 @click.option("--image", default=None, help="Authenticate from an image instead of webcam")
-def main(autosave, listdir, showid, image):
+@click.option("--multiple", default=False, help="Try with multiple images in folder")
+def main(autosave, listdir, showid, image, multiple):
     time_start = time.time()
 
     if listdir:
@@ -94,28 +114,25 @@ def main(autosave, listdir, showid, image):
             for _image in images:
                 print(_image)
     else:
-        frame = None
         if image is not None:
+            # get image from path
             frame = face_recognition.load_image_file("images/{}".format(image))
+            authenticate(autosave, showid, frame)
         else:
-            frame = get_image_from_cam()
-
-        if frame is not None:
-            image_to_be_matched_encoded = prepare_image(frame)
-            uuid = get_image_identifier(image_to_be_matched_encoded)
-
-            if not uuid:
-                print('Access Denied!')
-                if autosave:
-                    print('Saving new user')
-                    uuid = store_image_for_reference(
-                        image_to_be_matched_encoded)
-                    if showid:
-                        print("Unique Identifier: ", uuid)
+            if not multiple:
+                # get single image from webcam
+                frame = get_image_from_cam()
+                authenticate(autosave, showid, frame)
             else:
-                print('Access Granted')
-                if showid:
-                    print("Unique Identifier: ", uuid)
+                images = os.listdir('images')
+                if len(images) <= 0:
+                    print('Empty Directory!')
+                else:
+                    for _image in images:
+                        # load each image and perform authentication
+                        frame = face_recognition.load_image_file(
+                            "images/{}".format(_image))
+                        authenticate(autosave, showid, frame)
 
     print('Took %s seconds' % (int(time.time() - time_start)))
 
