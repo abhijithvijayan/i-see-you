@@ -2,6 +2,7 @@ import os
 import cv2
 import uuid
 import time
+import click
 import pickle
 import face_recognition
 
@@ -17,18 +18,18 @@ def prepare_image(cameraImage):
 
 
 def store_image_for_reference(image):
-    uuid = uuid.uuid4().hex
+    uid = uuid.uuid4().hex
 
-    db_file = open('persist/' + uuid, 'ab')
+    db_file = open('persist/' + uid, 'ab')
     pickle.dump(image, db_file)
 
-    return uuid
+    return uid
 
 
 def get_image_identifier(image_to_match):
     if not os.path.exists('persist'):
         os.mkdir('persist')
-        return store_image_for_reference(image_to_match)
+        return None
 
     images = os.listdir('persist')
     """
@@ -45,7 +46,7 @@ def get_image_identifier(image_to_match):
             print('Access Granted')
             return image
 
-    return store_image_for_reference(image_to_match)
+    return None
 
 
 def get_image_from_cam():
@@ -66,12 +67,24 @@ def get_image_from_cam():
             return frame
 
 
-if __name__ == '__main__':
+@click.command()
+@click.option("--autosave", default=False, help="Auto save new user.")
+def main(autosave):
     time_start = time.time()
-
     frame = get_image_from_cam()
-    image_to_be_matched_encoded = prepare_image(frame)
-    uuid = get_image_identifier(image_to_be_matched_encoded)
+    if frame is not None:
+        image_to_be_matched_encoded = prepare_image(frame)
+        uuid = get_image_identifier(image_to_be_matched_encoded)
 
-    print("Unique Identifier : ", uuid)
+        if not uuid:
+            print('Access Denied!')
+            if autosave:
+                print('Saving new user')
+                store_image_for_reference(image_to_be_matched_encoded)
+
     print('Took %s seconds' % (int(time.time() - time_start)))
+    # print("Unique Identifier : ", uuid)
+
+
+if __name__ == '__main__':
+    main()
