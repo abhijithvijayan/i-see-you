@@ -26,9 +26,18 @@ def store_image_for_reference(image):
     return uid
 
 
+def create_out_dir():
+    os.mkdir('persist')
+
+
+# returns boolean
+def out_dir_exist():
+    return os.path.exists('persist')
+
+
 def get_image_identifier(image_to_match):
-    if not os.path.exists('persist'):
-        os.mkdir('persist')
+    if not out_dir_exist():
+        create_out_dir()
         return None
 
     images = os.listdir('persist')
@@ -43,7 +52,6 @@ def get_image_identifier(image_to_match):
         result = face_recognition.compare_faces(
             [image_to_match], existing_encoded_image)
         if result[0] == True:
-            print('Access Granted')
             return image
 
     return None
@@ -69,21 +77,41 @@ def get_image_from_cam():
 
 @click.command()
 @click.option("--autosave", default=False, help="Auto save new user.")
-def main(autosave):
+@click.option("--listdir", default=False, help="List all existing users.")
+@click.option("--showid", default=False, help="Show ID of authenticated user on success.")
+def main(autosave, listdir, showid):
     time_start = time.time()
-    frame = get_image_from_cam()
-    if frame is not None:
-        image_to_be_matched_encoded = prepare_image(frame)
-        uuid = get_image_identifier(image_to_be_matched_encoded)
 
-        if not uuid:
-            print('Access Denied!')
-            if autosave:
-                print('Saving new user')
-                store_image_for_reference(image_to_be_matched_encoded)
+    if listdir:
+        if not out_dir_exist():
+            create_out_dir()
+
+        images = os.listdir('persist')
+        if len(images) <= 0:
+            print('Empty Directory!')
+        else:
+            for image in images:
+                print(image)
+    else:
+        frame = get_image_from_cam()
+        if frame is not None:
+            image_to_be_matched_encoded = prepare_image(frame)
+            uuid = get_image_identifier(image_to_be_matched_encoded)
+
+            if not uuid:
+                print('Access Denied!')
+                if autosave:
+                    print('Saving new user')
+                    uuid = store_image_for_reference(
+                        image_to_be_matched_encoded)
+                    if showid:
+                        print("Unique Identifier: ", uuid)
+            else:
+                print('Access Granted')
+                if showid:
+                    print("Unique Identifier: ", uuid)
 
     print('Took %s seconds' % (int(time.time() - time_start)))
-    # print("Unique Identifier : ", uuid)
 
 
 if __name__ == '__main__':
