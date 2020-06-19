@@ -79,7 +79,8 @@ def get_image_from_cam():
 @click.option("--autosave", default=False, help="Auto save new user.")
 @click.option("--listdir", default=False, help="List all existing users.")
 @click.option("--showid", default=False, help="Show ID of authenticated user on success.")
-def main(autosave, listdir, showid):
+@click.option("--image", default=None, help="Authenticate from an image instead of webcam")
+def main(autosave, listdir, showid, image):
     time_start = time.time()
 
     if listdir:
@@ -90,10 +91,15 @@ def main(autosave, listdir, showid):
         if len(images) <= 0:
             print('Empty Directory!')
         else:
-            for image in images:
-                print(image)
+            for _image in images:
+                print(_image)
     else:
-        frame = get_image_from_cam()
+        frame = None
+        if image is not None:
+            frame = face_recognition.load_image_file("images/{}".format(image))
+        else:
+            frame = get_image_from_cam()
+
         if frame is not None:
             image_to_be_matched_encoded = prepare_image(frame)
             uuid = get_image_identifier(image_to_be_matched_encoded)
