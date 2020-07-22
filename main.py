@@ -143,6 +143,7 @@ def main(autosave, listdir, showid, image, multiple):
                 else:
                     for _image in images:
                         # load each image and perform authentication
+                        print("Using image: {}".format(_image))
                         frame = face_recognition.load_image_file(
                             "images/{}".format(_image))
                         authenticate(autosave, showid, frame)
