@@ -89,7 +89,6 @@ def show_user_info(user):
     username = person[1].replace('%', ' ')
     print("Username: {}".format(username))
     print("Unique Identifier: {}".format(uuid))
-    print()
 
 
 def authenticate(autosave, showid, image=None):
@@ -113,6 +112,8 @@ def authenticate(autosave, showid, image=None):
             print('---- Access Granted ----')
             if showid:
                 show_user_info(user)
+
+        print()
 
 
 @click.command()
@@ -138,7 +139,7 @@ def main(autosave, listdir, showid, image, multiple):
     else:
         if image is not None:
             # get image from path
-            frame = face_recognition.load_image_file("images/".format(image))
+            frame = face_recognition.load_image_file("images/{}".format(image))
             authenticate(autosave, showid, frame)
         else:
             if not multiple:
