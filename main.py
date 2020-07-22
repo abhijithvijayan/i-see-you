@@ -17,13 +17,15 @@ def prepare_image(cameraImage):
     return image_encoded[0]
 
 
-def store_image_for_reference(image):
+def store_image_for_reference(image, username):
     uid = uuid.uuid4().hex
+    filename = "{0}_{1}".format(uid, username.replace(
+        'Default: ', '').replace(' ', '%'))
 
-    db_file = open('persist/' + uid, 'ab')
+    db_file = open('persist/' + filename, 'ab')
     pickle.dump(image, db_file)
 
-    return uid
+    return filename
 
 
 def create_out_dir():
@@ -75,23 +77,34 @@ def get_image_from_cam():
             return frame
 
 
+def show_user_info(user):
+    person = user.split('_')
+    uuid = person[0]
+    username = person[1].replace('%', ' ')
+    print("Username: {}".format(username))
+    print("Unique Identifier: {}".format(uuid))
+    print()
+
+
 def authenticate(autosave, showid, image=None):
     if image is not None:
         image_to_be_matched_encoded = prepare_image(image)
-        uuid = get_image_identifier(image_to_be_matched_encoded)
+        user = get_image_identifier(image_to_be_matched_encoded)
 
-        if not uuid:
-            print('Access Denied!')
+        if not user:
+            print('---- Access Denied! ----')
             if autosave:
-                print('Saving new user')
-                uuid = store_image_for_reference(
-                    image_to_be_matched_encoded)
+                print('Saving new user...')
+                username = click.prompt(
+                    'Enter username: ', default='Default: No username', type=str)
+                user = store_image_for_reference(
+                    image_to_be_matched_encoded, username)
                 if showid:
-                    print("Unique Identifier: ", uuid)
+                    show_user_info(user)
         else:
-            print('Access Granted')
+            print('---- Access Granted ----')
             if showid:
-                print("Unique Identifier: ", uuid)
+                show_user_info(user)
 
 
 @click.command()
