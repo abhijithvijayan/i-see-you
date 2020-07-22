@@ -18,12 +18,14 @@ def prepare_image(cameraImage):
 
 
 def store_image_for_reference(image, username):
+    # generate a uuid for the new image
     uid = uuid.uuid4().hex
+    # `uuid_username` format
     filename = "{0}_{1}".format(uid, username.replace(
         'Default: ', '').replace(' ', '%'))
 
-    db_file = open('persist/' + filename, 'ab')
-    pickle.dump(image, db_file)
+    out_file = open('persist/' + filename, 'ab')
+    pickle.dump(image, out_file)
 
     return filename
 
@@ -48,11 +50,15 @@ def get_image_identifier(image_to_match):
     If no matches, store as new
     """
     for image in images:
+        # open image in binary format
         image_meta_file = open('persist/' + image, 'rb')
         existing_encoded_image = pickle.load(image_meta_file)
 
+        # compare with existing encoded
         result = face_recognition.compare_faces(
             [image_to_match], existing_encoded_image)
+
+        # match is found
         if result[0] == True:
             return image
 
@@ -88,6 +94,7 @@ def show_user_info(user):
 
 def authenticate(autosave, showid, image=None):
     if image is not None:
+        # get the encoded version
         image_to_be_matched_encoded = prepare_image(image)
         user = get_image_identifier(image_to_be_matched_encoded)
 
@@ -95,6 +102,7 @@ def authenticate(autosave, showid, image=None):
             print('---- Access Denied! ----')
             if autosave:
                 print('Saving new user...')
+                # prompt to get a username
                 username = click.prompt(
                     'Enter username: ', default='Default: No username', type=str)
                 user = store_image_for_reference(
@@ -130,7 +138,7 @@ def main(autosave, listdir, showid, image, multiple):
     else:
         if image is not None:
             # get image from path
-            frame = face_recognition.load_image_file("images/{}".format(image))
+            frame = face_recognition.load_image_file("images/".format(image))
             authenticate(autosave, showid, frame)
         else:
             if not multiple:
