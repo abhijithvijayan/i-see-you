@@ -96,7 +96,7 @@ def authenticate(autosave, showid, image=None):
         # get the encoded version
         image_to_be_matched_encoded = prepare_image(image)
         # encoding successful
-        if not image_to_be_matched_encoded:
+        if image_to_be_matched_encoded is not None:
             user = get_image_identifier(image_to_be_matched_encoded)
 
             if not user:
@@ -114,8 +114,7 @@ def authenticate(autosave, showid, image=None):
                 print('---- Access Granted ----')
                 if showid:
                     show_user_info(user)
-
-            print()
+        print()
 
 
 @click.command()
