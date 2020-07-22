@@ -125,7 +125,8 @@ def main(autosave, listdir, showid, image, multiple):
             print('Empty Directory!')
         else:
             for _image in images:
-                print(_image)
+                # Trim only id, ignore `Name` part
+                print(_image.split('_')[0])
     else:
         if image is not None:
             # get image from path
