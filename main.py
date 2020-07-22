@@ -12,7 +12,7 @@ def prepare_image(cameraImage):
 
     if(len(image_encoded) == 0):
         print("Error : Face features cannot be extracted from this file.")
-        exit(1)
+        return None
 
     return image_encoded[0]
 
@@ -95,25 +95,27 @@ def authenticate(autosave, showid, image=None):
     if image is not None:
         # get the encoded version
         image_to_be_matched_encoded = prepare_image(image)
-        user = get_image_identifier(image_to_be_matched_encoded)
+        # encoding successful
+        if not image_to_be_matched_encoded:
+            user = get_image_identifier(image_to_be_matched_encoded)
 
-        if not user:
-            print('---- Access Denied! ----')
-            if autosave:
-                print('Saving new user...')
-                # prompt to get a username
-                username = click.prompt(
-                    'Enter username: ', default='Default: No username', type=str)
-                user = store_image_for_reference(
-                    image_to_be_matched_encoded, username)
+            if not user:
+                print('---- Access Denied! ----')
+                if autosave:
+                    print('Saving new user...')
+                    # prompt to get a username
+                    username = click.prompt(
+                        'Enter username: ', default='Default: No username', type=str)
+                    user = store_image_for_reference(
+                        image_to_be_matched_encoded, username)
+                    if showid:
+                        show_user_info(user)
+            else:
+                print('---- Access Granted ----')
                 if showid:
                     show_user_info(user)
-        else:
-            print('---- Access Granted ----')
-            if showid:
-                show_user_info(user)
 
-        print()
+            print()
 
 
 @click.command()
